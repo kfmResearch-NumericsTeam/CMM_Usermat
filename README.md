@@ -1,7 +1,21 @@
 # CMM_Usermat
 
-Here are a few example of ADPL scripts for ansys. It's not the easiest language to read.
+Implementation of the Cracked Membrane Model (CMM) in ANSYS Mechanical APDL as a User defined Material (Usermat) for nonlinear finite element analysis of reinforced concrete shells.
 
-I have also created a markdown file where I explain a bit what is inside these script files. The input file studied for this case is the cantilever beam with a surface load. I have either add inline comments or comments before the code blocks.
+## Installatoin
+There will be a link for installation instructions. Please contact weber@ibk.baug.ethz.ch
 
-I also join the documentation found on Ansys website. If you want to access these resources, create an account on https://support.ansys.com/portal/site/AnsysCustomerPortal
+## Getting Started 
+There will be a link the "Getting Started" instructions (tutorials and examples).
+
+## Questions and Feedback
+For questions and feedback , have a look at the compas_tna category of the COMPAS forum.
+
+## Issues
+If you run into problems, please file an issue on the issue tracker. If we don't know it is broken, we can't fix it...
+
+## Contributing
+Guidelines for developers are under construction. However, we always accept contributions in the form of Pull Requests.
+
+## License
+CMM_Usermat is licensed under the X License. See LICENSE, for more information.
