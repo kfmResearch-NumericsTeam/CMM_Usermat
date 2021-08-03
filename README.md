@@ -2,7 +2,7 @@
 
 Implementation of the Cracked Membrane Model (CMM) in ANSYS Mechanical APDL as a User defined Material (Usermat) for nonlinear finite element analysis of reinforced concrete shells.
 
-## Installatoin
+## Installation
 There will be a link for installation instructions. Please contact weber@ibk.baug.ethz.ch
 
 ## Getting Started 
