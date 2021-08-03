@@ -1,0 +1,351 @@
+! ----------------------------------------------------------------------------
+! ----------------------------------------------------------------------------
+! XX SHEAR STRENGTH ALGORITHMUS (USED IN A DO LOOP) 
+! ----------------------------------------------------------------------------
+! ----------------------------------------------------------------------------
+!
+! Algo inside the element loops (ii)
+! -----------------------------------------------------------------------------    
+    ETAB,ERASE
+    ESEL,S,ELEM, ,N_E(ii)
+
+    ! Extract shear forces
+    ETABLE,VX,SMISC,7                
+    *GET,v_x,ETAB,1,ELEM,N_E(ii)        
+    ETABLE,VY,SMISC,8
+    *GET,v_y,ETAB,2,ELEM,N_E(ii)
+    ETABLE,THICK,SMISC,17                    
+    *GET,thick_ele,ETAB,3,ELEM,N_E(ii)      
+    
+    ! type associated with the selected element (NrT: Shell ID, NrL=Numbers of Layer)           
+    *GET, NrT, ELEM,N_E(ii), attr, type 
+    *GET, NrL, SHEL, NrT, Prop,NLAY       
+            
+    ! Principal shear direction
+    *IF,v_x,EQ,0,then
+        psi_0=1.57079632 !(pi/2)
+    *ELSE
+        psi_0=atan(v_y/v_x)
+    *ENDIF       
+    
+    ! z-coordiantes RC Layer and Strains in top and bottom layer
+    NSLE,ALL
+    *GET,NrN,NODE,0,COUNT              
+    *DIM,N_N,ARRAY,NrN,1
+    *VGET,N_N,NODE, ,NLIST  
+    *DIM,coor_layer_1L,ARRAY,4,1
+    *DIM,coor_layer_2L,ARRAY,4,1
+    *DIM,coor_layer_3L,ARRAY,4,1
+    *DIM,coor_layer_4L,ARRAY,4,1    
+    *DIM,evt,ARRAY,4,1
+    *DIM,evb,ARRAY,4,1
+    *DIM,coor_layer_top,ARRAY,4,1
+    *DIM,coor_layer_bot,ARRAY,4,1
+    
+    ! Mean values for one element (extracted from the corresponding nodes)
+    aux = 0 
+    *DO,kk,1,NrN
+        Layer,all
+        aux = aux+1
+        ! Number of the RC Layers
+        *GET,layer_1L,NODE,N_N(kk),SVAR,58      
+        *GET,layer_2L,NODE,N_N(kk),SVAR,59  
+        *GET,layer_3L,NODE,N_N(kk),SVAR,60  
+        *GET,layer_4L,NODE,N_N(kk),SVAR,61 
+            
+        ! Coordiantes RC Layer (z-direction)
+        LAYER,layer_1L                                                          
+        *GET,coor_layer_1L(aux,1),NODE,N_N(kk),SVAR,65   ! Layer coor in z
+        LAYER,layer_2L                                                          
+        *GET,coor_layer_2L(aux,1),NODE,N_N(kk),SVAR,65        
+        LAYER,layer_3L                                                          
+        *GET,coor_layer_3L(aux,1),NODE,N_N(kk),SVAR,65        
+        LAYER,layer_4L                                                          
+        *GET,coor_layer_4L(aux,1),NODE,N_N(kk),SVAR,65        
+                      
+        ! Strains in the top and bottom layer    
+        Layer,NrL ! Top layer (in positiv z-direction)
+        *GET,coor_layer_top(aux,1),NODE,N_N(kk),SVAR,65  
+        *GET,ext,NODE,N_N(kk),SVAR,69          
+        *GET,eyt,NODE,N_N(kk),SVAR,70          
+        *GET,exyt,NODE,N_N(kk),SVAR,71                     
+        evt(aux,1)=(ext+eyt)/2+(ext-eyt)/2*cos(2*psi_0)+exyt/2*sin(2*psi_0)
+            
+        Layer,1 ! Bottom Layer (in negativ z-direction)  
+        *GET,coor_layer_bot(aux,1),NODE,N_N(kk),SVAR,65  
+        *GET,exb,NODE,N_N(kk),SVAR,69          
+        *GET,eyb,NODE,N_N(kk),SVAR,70          
+        *GET,exyb,NODE,N_N(kk),SVAR,71         
+        evb(aux,1)=(exb+eyb)/2+(exb-eyb)/2*cos(2*psi_0)+exyb/2*sin(2*psi_0)
+    *ENDDO         
+    Layer,all
+
+
+    ! Averaged (control) strains top/bot   
+    m_evt=(evt(1,1)+evt(2,1)+evt(3,1)+evt(4,1))/4     
+    m_evb=(evb(1,1)+evb(2,1)+evb(3,1)+evb(4,1))/4     
+    
+    ! Correction factor for Layer 1,2,3,4,top,bot coordinates
+    *GET,h_layer_1L,SHEL,NrT,Layd,layer_1L,THIC 
+    *GET,NrGP_1L,SHEL,NrT,LAYD,layer_1L,NINT
+    *IF,h_layer_1L,GT,0,then   
+       *if,NrGP_1L,EQ,3,then
+            c_L1=-h_layer_1L/2
+        *elseif,NrGP_L4,EQ,1,then
+            c_L1=0
+        *else
+           /sys,msg %username% "This case is not supported!!!"
+        *endif
+    *ELSE
+        /sys,msg %username% "reinforced Layer 1 for shear check has zero thickness!!!"
+    *ENDIF
+    
+    *GET,h_layer_2L,SHEL,NrT,Layd,layer_2L,THIC 
+    *GET,NrGP_2L,SHEL,NrT,LAYD,layer_2L,NINT
+    *IF,h_layer_2L,GT,0,then
+       *if,NrGP_2L,EQ,3,then
+            c_L2=-h_layer_2L/2
+        *elseif,NrGP_L4,EQ,1,then
+            c_L2=0
+        *else
+           /sys,msg %username% "This case is not supported!!!"
+        *endif
+    *ELSE
+        /sys,msg %username% "reinforced Layer 2 for shear check has zero thickness!!!"
+    *ENDIF
+    
+    *GET,h_layer_3L,SHEL,NrT,Layd,layer_3L,THIC 
+    *GET,NrGP_3L,SHEL,NrT,LAYD,layer_3L,NINT
+    *IF,h_layer_3L,GT,0,then 
+       *if,NrGP_3L,EQ,3,then
+            c_L3=-h_layer_3L/2
+        *elseif,NrGP_L4,EQ,1,then
+            c_L3=0
+        *else
+           /sys,msg %username% "This case is not supported!!!"
+        *endif
+    *ELSE
+        /sys,msg %username% "reinforced Layer 3 for shear check has zero thickness!!!"
+    *ENDIF
+    
+    *GET,h_layer_4L,SHEL,NrT,Layd,layer_4L,THIC 
+    *GET,NrGP_4L,SHEL,NrT,LAYD,layer_4L,NINT
+    *IF,h_layer_4L,GT,0,then  
+        *if,NrGP_4L,EQ,3,then
+            c_L4=-h_layer_4L/2
+        *elseif,NrGP_L4,EQ,1,then
+            c_L4=0
+        *else
+           /sys,msg %username% "This case is not supported!!!"
+        *endif
+    *ELSE
+        /sys,msg %username% "reinforced Layer 4 for shear check has zero thickness!!!"
+    *ENDIF
+
+    *GET,h_layer_top,SHEL,NrT,Layd,NrL,THIC
+    *GET,NrGP_top,SHEL,NrT,LAYD,NrL,NINT
+    *IF,h_layer_top,GT,0,then 
+        *if,NrGP_top,EQ,3,then
+            c_top=-h_layer_top/2
+        *elseif,NrGP_top,EQ,1,then
+            c_top=0
+        *else
+           /sys,msg %username% "This case is not supported!!!"
+        *endif
+    *ELSE
+        /sys,msg %username% "Layer top for shear check has zero thickness!!!"
+    *ENDIF
+    
+    *GET,h_layer_bot,SHEL,NrT,Layd,1,THIC
+    *GET,NrGP_bot,SHEL,NrT,LAYD,1,NINT
+    *IF,h_layer_bot,GT,0,then
+        *if,NrGP_bot,EQ,3,then
+            c_bot=-h_layer_bot/2
+        *elseif,NrGP_bot,EQ,1,then
+            c_bot=0
+        *else
+           /sys,msg %username% "This case is not supported!!!"
+        *endif
+    *ELSE
+        /sys,msg %username% "Layer bot for shear check has zero thickness!!!"
+    *ENDIF
+
+    ! Mean Distance between Reference Surface (not default origin) and 1./2. rdist_Ref_to_bot_eleeinforced Layers (avaraged for all four Nodes A,B,C,D)
+    dist_Ref_to_L12_A=(coor_layer_1L(1,1)+c_L1+coor_layer_2L(1,1)+c_L2)/2 
+    dist_Ref_to_L12_B=(coor_layer_1L(2,1)+c_L1+coor_layer_2L(2,1)+c_L2)/2
+    dist_Ref_to_L12_C=(coor_layer_1L(3,1)+c_L1+coor_layer_2L(3,1)+c_L2)/2
+    dist_Ref_to_L12_D=(coor_layer_1L(4,1)+c_L1+coor_layer_2L(4,1)+c_L2)/2
+    dist_Ref_to_L12_ele=(dist_Ref_to_L12_A+dist_Ref_to_L12_B+dist_Ref_to_L12_C+dist_Ref_to_L12_D)/4 
+     
+    ! Mean Distance between Reference Surface (not default origin) and 3./4. reinforced Layers (avaraged for all four Nodes A,B,C,D)   
+    dist_Ref_to_L34_A=(coor_layer_3L(1,1)+c_L3+coor_layer_4L(1,1)+c_L4)/2
+    dist_Ref_to_L34_B=(coor_layer_3L(2,1)+c_L3+coor_layer_4L(2,1)+c_L4)/2
+    dist_Ref_to_L34_C=(coor_layer_3L(3,1)+c_L3+coor_layer_4L(3,1)+c_L4)/2
+    dist_Ref_to_L34_D=(coor_layer_3L(4,1)+c_L3+coor_layer_4L(4,1)+c_L4)/2         
+    dist_Ref_to_L34_ele=(dist_Ref_to_L34_A+dist_Ref_to_L34_B+dist_Ref_to_L34_C+dist_Ref_to_L34_D)/4 
+    
+    ! Mean Distance between Reference Surface (not default origin) and top/bot Layers (avaraged for all four Nodes A,B,C,D)  
+    dist_Ref_to_top_ele_aux1=coor_layer_top(1,1)+c_top+coor_layer_top(2,1)+c_top
+    dist_Ref_to_top_ele_aux2=coor_layer_top(3,1)+c_top+coor_layer_top(4,1)+c_top
+    dist_Ref_to_top_ele=(dist_Ref_to_top_ele_aux1+dist_Ref_to_top_ele_aux2)/4  
+    
+    dist_Ref_to_bot_ele_aux1=coor_layer_bot(1,1)+c_bot+coor_layer_bot(2,1)+c_bot
+    dist_Ref_to_bot_ele_aux2=coor_layer_bot(3,1)+c_bot+coor_layer_bot(4,1)+c_bot
+    dist_Ref_to_bot_ele=(dist_Ref_to_bot_ele_aux1+dist_Ref_to_bot_ele_aux2)/4
+       
+    ! Distance Top Layer to 1./2. reinforced Layers (d_topL_to_L12 always positiv)
+    d_topL_to_L12=abs(dist_Ref_to_top_ele-dist_Ref_to_L12_ele)
+    ! Distance bot Layer to 1./2. reinforced Layers (d_botL_to_L12 always positiv)
+    d_botL_to_L12=abs(dist_Ref_to_bot_ele-dist_Ref_to_L12_ele) 
+        
+    ! Distance top Layer to 3./4. reinforced Layers (d_topL_to_L34 always positiv)
+    d_topL_to_L34=abs(dist_Ref_to_top_ele-dist_Ref_to_L34_ele) 
+    ! Distance bot Layer to 3./4. reinforced Layers (d_botL_to_L34 always positiv)
+    d_botL_to_L34=abs(dist_Ref_to_bot_ele-dist_Ref_to_L34_ele) 
+            
+    ! Determine if top or bot Layer is under Compression  (9 basic cases)
+    *IF,m_evt,LT,0,AND,m_evb,GT,0,then        
+        ! go to top algo
+        top_algo=1
+        bot_algo=0
+    *ELSEIF,m_evt,LT,0,AND,m_evb,EQ,0,then    
+        ! go to top algo
+        top_algo=1
+        bot_algo=0
+    *ELSEIF,m_evt,LT,0,AND,m_evb,LT,0,then    
+        *if,m_evt,LE,m_evb,then 
+            ! go to top algo
+            top_algo=1
+            bot_algo=0
+        *elseif,m_evt,GT,m_evb,then 
+            ! go to bot algo
+            top_algo=0
+            bot_algo=1 
+        *else
+            /sys,msg %username% "ERROR in shear failure algo!!!" 
+        *endif
+    *ELSEIF,m_evt,EQ,0,AND,m_evb,GT,0,then
+        ! go to top algo
+        top_algo=1
+        bot_algo=0
+    *ELSEIF,m_evt,EQ,0,AND,m_evb,EQ,0,then
+        ! go to top algo
+        top_algo=1
+        bot_algo=0       
+    *ELSEIF,m_evt,EQ,0,AND,m_evb,LT,0,then
+        ! go to bot algo
+        top_algo=0
+        bot_algo=1          
+    *ELSEIF,m_evt,GT,0,AND,m_evb,GT,0,then
+        *if,m_evt,LE,m_evb,then 
+            ! go to top algo
+            top_algo=1
+            bot_algo=0
+        *elseif,m_evt,GT,m_evb,then 
+            ! go to bot algo
+            top_algo=0
+            bot_algo=1 
+        *endif       
+    *ELSEIF,m_evt,GT,0,AND,m_evb,EQ,0,then
+        ! go to bot algo
+        top_algo=0
+        bot_algo=1        
+    *ELSEIF,m_evt,GT,0,AND,m_evb,LT,0,then
+        ! go to bot algo
+        top_algo=0
+        bot_algo=1   
+    *ELSE
+        /sys,msg %username% "ERROR in shear failure algo!!!" 
+    *ENDIF  
+     
+    ! Determine control Layer
+    ! Top Algo - Top is under compression   
+    *IF,top_algo,EQ,1,AND,bot_algo,EQ,0,then 
+        ! Define statical high
+        d_v=d_topL_to_L12
+        ! Estimate thickness of top layer 
+        *GET,h_layer,SHEL,NrT,Layd,NrL,THIC         
+        ! Case distinction if decisive Layer is above or below the default origin
+        *if,0.6*d_topL_to_L12,gt,thick_ele/2,then             
+            L_06d_distance=d_botL_to_L12+0.4*d_topL_to_L12
+            NrL_06d=NINT(L_06d_distance/h_layer+1)
+        *elseif,0.6*d_topL_to_L12,lt,thick_ele/2,then
+            L_06d_distance=0.6*d_topL_to_L12
+            NrL_06d=NINT(NrL-L_06d_distance/h_layer)
+        *else
+            /sys,msg %username% "control Layer for shear check in zero thickness Layer!!!" 
+        *endif
+        ! Check thickness of the Layer at 0.6d and compare it with the estimation
+        *GET,h_layer_06d,SHEL,NrT,Layd,NrL_06d,THIC   
+        *if,h_layer_06d,EQ,h_layer,then
+        *else
+          /sys,msg %username% "control Layer for shear check in zero thickness Layer!!!" 
+        *endif
+    
+    ! Bot Algo - Bot is under compression   
+    *ELSEIF,top_algo,EQ,0,AND,bot_algo,EQ,1,then
+        ! Define statical high
+        d_v=d_botL_to_L34    
+        ! Estimate thickness of bot layer 
+        *GET,h_layer,SHEL,NrT,Layd,1,THIC         
+        ! Case distinction if decisive Layer is above or below the default origin
+        *if,0.6*d_botL_to_L34,gt,thick_ele/2,then             
+            L_06d_distance=d_topL_to_L34+0.4*d_botL_to_L34
+            NrL_06d=NINT(NrL-L_06d_distance/h_layer)
+        *elseif,0.6*d_botL_to_L34,lt,thick_ele/2,then
+            L_06d_distance=0.6*d_botL_to_L34
+            NrL_06d=NINT(L_06d_distance/h_layer+1)
+        *else
+            /sys,msg %username% "control Layer for shear check in zero thickness Layer!!!" 
+        *endif
+        
+        ! Check thickness of the Layer at 0.6d and compare it with the estimation
+        *GET,h_layer_06d,SHEL,NrT,Layd,NrL_06d,THIC   
+        *if,h_layer_06d,EQ,h_layer,then
+        *else
+          /sys,msg %username% "control Layer for shear check in zero thickness Layer!!!" 
+        *endif
+    *endif
+        
+    ! Extract the control strain in the decesive Layer (Layer Number: NrL_06d)
+    *DIM,e_v,ARRAY,4,1
+    aux = 0 
+    *DO,kk,1,NrN
+        aux = aux+1 
+        *IF,NrL_06d,GT,0,THEN       
+            LAYER,NrL_06d
+            *GET,e_x,NODE,N_N(kk),SVAR,69          
+            *GET,e_y,NODE,N_N(kk),SVAR,70          
+            *GET,e_xy,NODE,N_N(kk),SVAR,71         
+            e_v(aux,1)=(e_x+e_y)/2+(e_x-e_y)/2*cos(2*psi_0)+e_xy/2*sin(2*psi_0)                          
+        *ELSE
+            /sys,msg %username% "control Layer for shear check is smaller/equal zero!!!!" 
+        *ENDIF                
+    *ENDDO 
+   
+    ! Mean value of the strain in the decesive Layer (NrL_06d) in principal shear direction
+    e_v_mean=(e_v(1,1)+e_v(2,1)+e_v(3,1)+e_v(4,1))/4   !          
+    
+    *IF,e_v_mean,LE,0,then
+        shear_check=0
+    *ELSEIF,e_v_mean,GT,0,then
+        shear_check=1
+    *ENDIF
+  
+    ! Calculate shear resistance and shear force
+    k_g=48/(16+D_max)
+    XI=1
+    k_d=1/(1+e_v_mean*2.5*d_v*k_g*XI)
+    v_rd=k_d*tau_cd*d_v
+    v_0=sqrt(v_x**2+v_y**2)
+
+    ! save shear strength values for results export   
+    *IF,shear_check,GT,0,then
+        vrd(ii,1)=N_E(ii)
+        vrd(ii,2)=v_rd
+        vrd(ii,3)=v_0
+    *ELSEIF,shear_check,LE,0,then 
+        vrd(ii,1)=N_E(ii)
+        vrd(ii,2)=-1
+        vrd(ii,3)=v_0
+    *ENDIF  
