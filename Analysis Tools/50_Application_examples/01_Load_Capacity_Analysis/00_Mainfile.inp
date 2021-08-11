@@ -3,7 +3,7 @@
 ! Projekt:      Benchmarktest TENSION 
 ! Objekt:       Forschung
 ! Modelling:    Marius Weber
-! Datum:        July 2021
+! Datum:        July 2021...
 ! 
 ! ----------------------------------------------------------------------------
 ! ----------------------------------------------------------------------------
@@ -80,19 +80,19 @@ n_F=1
 *DIM,rho,ARRAY,n_F
 *DIM,R_Rohr,ARRAY,n_F                          
 *do,ii,1,n_F
-  R_Rohr(ii) = -1                   ! Hohlkörperplatte (R_Rohr=radius)
+  R_Rohr(ii) = -1                   ! HohlkÃ¶rperplatte (R_Rohr=radius)
   rho(ii) = rho_B                   ! Dichte von Beton [g/mm^3] 
-  oo(ii)  =  30                     ! Bewehrungsüberdeckung oben
-  uu(ii)  =  30                     ! Bewehrungsüberdeckung unten
+  oo(ii)  =  30                     ! BewehrungsÂÃ¼berdeckung oben
+  uu(ii)  =  30                     ! BewehrungsÂÃ¼berdeckung unten
 *enddo
 !
-! 2.3 Werkstoffparameter für die Bewehrungen
+! 2.3 Werkstoffparameter fÂÃ¼r die Bewehrungen
 ! ----------------------------------------------------------------------------
 !
-! 2.3.1 Aufbau der Vektoren für die 1., 2., 3. und 4. Lage
+! 2.3.1 Aufbau der Vektoren fÃ¼r die 1., 2., 3. und 4. Lage
 ! --------------------------------------------------------
 !
-! Aufbau Vektoren für 1. Lage
+! Aufbau Vektoren fÂÃ¼r 1. Lage
 *DIM,stahl1,ARRAY,n_F
 *DIM,zm1,ARRAY,n_F
 *DIM,fsy1,ARRAY,n_F
@@ -107,7 +107,7 @@ n_F=1
 *DIM,dm1,ARRAY,n_F
 *DIM,psi1,ARRAY,n_F
 !
-! Aufbau Vektoren für 2. Lage
+! Aufbau Vektoren fÂÃ¼r 2. Lage
 *DIM,stahl2,ARRAY,n_F
 *DIM,zm2,ARRAY,n_F
 *DIM,fsy2,ARRAY,n_F
@@ -122,7 +122,7 @@ n_F=1
 *DIM,dm2,ARRAY,n_F
 *DIM,psi2,ARRAY,n_F
 !
-! Aufbau Vektoren für 3. Lage
+! Aufbau Vektoren fÂÃ¼r 3. Lage
 *DIM,stahl3,ARRAY,n_F
 *DIM,zm3,ARRAY,n_F
 *DIM,fsy3,ARRAY,n_F
@@ -137,7 +137,7 @@ n_F=1
 *DIM,dm3,ARRAY,n_F
 *DIM,psi3,ARRAY,n_F
 !
-! Aufbau Vektoren für 4. Lage
+! Aufbau Vektoren fÃ¼Âr 4. Lage
 *DIM,stahl4,ARRAY,n_F
 *DIM,zm4,ARRAY,n_F
 *DIM,fsy4,ARRAY,n_F
@@ -152,7 +152,7 @@ n_F=1
 *DIM,dm4,ARRAY,n_F
 *DIM,psi4,ARRAY,n_F     
 !
-! 2.3.2 Zuordnung der Werkstoffparameter für alle Ansys Flächen 
+! 2.3.2 Zuordnung der Werkstoffparameter fÃ¼r alle Ansys FlÃ¤chen 
 ! -------------------------------------------------------------
 !
 f_sy = fsy_P                        ! Fliesspannung/Beiwert [N/mm2] 
@@ -166,11 +166,11 @@ f_su = fsu_P                        ! Bruchspannung/Beiwert [N/mm2]
     fsy1(ii) = f_sy                 ! Fliesspannung/Beiwert [N/mm2] 
     fsu1(ii) = f_su                 ! Bruchspannung/Beiwert [N/mm2]  
     esu1(ii) = 0.15                ! Bruchverzerrung*Beiwert [-]
-    esv1(ii) = 0.018                ! Für bilin. nicht benötigt [-]
-    Es1(ii) = 200000                ! Elastizitätsmodul [N/mm2] 
-    ka1(ii) = -1                    ! Für bilin. nicht benötigt [-]
-    kb1(ii) = -1                    ! Für bilin. nicht benötigt [-]
-    kc1(ii) = -1                    ! Für bilin. nicht benötigt [-]
+    esv1(ii) = 0.018                ! FÃ¼r bilin. nicht benÃ¶tigt [-]
+    Es1(ii) = 200000                ! ElastizitÃ¤tsmodul [N/mm2] 
+    ka1(ii) = -1                    ! FÃ¼r bilin. nicht benÃ¶tigt [-]
+    kb1(ii) = -1                    ! FÃ¼r bilin. nicht benÃ¶tigt [-]
+    kc1(ii) = -1                    ! FÃ¼r bilin. nicht benÃ¶tigt [-]
     as1(ii) = 2 
     dm1(ii) = 20
     psi1(ii) = 90
@@ -222,10 +222,10 @@ f_su = fsu_P                        ! Bruchspannung/Beiwert [N/mm2]
 *enddo
 !
 !
-! 2.4 Werkstoffparameter für den Beton
+! 2.4 Werkstoffparameter fÂÃ¼r den Beton
 ! ----------------------------------------------------------------------------
 !
-! 2.4.1 Aufbau der Vektoren für alle Ansys Flächen
+! 2.4.1 Aufbau der Vektoren fÃ¼r alle Ansys FlÃ¤chen
 ! ------------------------------------------------
 !
 *DIM,beton,ARRAY,n_F
@@ -246,7 +246,7 @@ f_su = fsu_P                        ! Bruchspannung/Beiwert [N/mm2]
 *DIM,k_vr,ARRAY,n_F
 *DIM,fswy,ARRAY,n_F
 !
-! 2.4.2 Zuordnung der Werkstoffparameter für alle Ansys Flächen 
+! 2.4.2 Zuordnung der Werkstoffparameter fÃ¼r alle Ansys FlÃ¤chen 
 ! -------------------------------------------------------------
 f_c=fcd_P
 tau_cd=tau_cd_P
@@ -267,13 +267,13 @@ D_max=D_max_P
 !
 ! Rissabstand
   lambda(ii) = 0.67                 ! Mittelwert
-  srmx(ii) = 1                      ! '1':Grundeinstellung für auto. Berechnung
-  srmy(ii) = 1                      ! '1':Grundeinstellung für auto. Berechnung
+  srmx(ii) = 1                      ! '1':Grundeinstellung fÃ¼r auto. Berechnung
+  srmy(ii) = 1                      ! '1':Grundeinstellung fÃ¼r auto. Berechnung
   Begrenzung(ii) = 2                ! '1' : Rissweitenlimitierung ja
                                     ! '2' : Rissweitenlimitierung nein   
 !
-! Berücksichtigung Einfluss Querkraft auf Zugkraft
-  KritQ(ii) = 0                     ! '0': nicht Bercksichtigen
+! BerÂÃ¼cksichtigung Einfluss Querkraft auf Zugkraft
+  KritQ(ii) = 0                     ! '0': nicht BerÂcksichtigen
 		 	                        ! '1': vrc = f_vr*1/3 fct
                                     ! '2': vrc = f_vr*1/6*sqrt(fcc)
   winkelD(ii)=45                    ! Winkel der Druckdiagonalen
@@ -307,7 +307,7 @@ allsel
 ! 2.6 Vernetzung der Struktur
 ! ----------------------------------------------------------------------------
 !
-eg = 400                          ! Wahl der Meshgrösse
+eg = 400                          ! Wahl der MeshgrÃ¶sse
 lesize,all,eg
 asel,all
 mshkey,3                            ! Mapped Meshing
@@ -393,7 +393,7 @@ time,1                    ! Zeit am Ende des Lastschrittes
 nropt,full,,on
 !
 ! Speichern von Daten
-outres,erase              ! Zurcksetzen auf Standard-Einstellungen
+outres,erase              ! ZurÂcksetzen auf Standard-Einstellungen
 outres,nsol,all !all     ! Nodal DOF solution
 outres,rsol,all !all     ! Nodal reaction solution
 outres,esol,all !all     ! Element solution
