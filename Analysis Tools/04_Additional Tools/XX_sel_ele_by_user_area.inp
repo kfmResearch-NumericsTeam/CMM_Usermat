@@ -1,0 +1,144 @@
+! ----------------------------------------------------------------------------
+! ----------------------------------------------------------------------------
+! XX SELECT ELEMENTS BY USER DEFINE AREAS 
+! ----------------------------------------------------------------------------
+! ----------------------------------------------------------------------------
+! 
+! Input Vectors: x1,x2,x3,x4,y1,y2,y3,y4,z1,z2,z3,z4 
+! Numbering counter clockwise, min one direction equal to zero
+!
+Allsel
+*GET,NrE_all,ELEM,0,COUNT               
+*DIM,ELE_LB,ARRAY,NrE_all,n_SC
+!
+
+! select all elements
+*DO,iLB,1,n_SC
+
+    ! Search plane (XY, XZ or YZ)
+    X_sum=abs(x1(iLB))+abs(x2(iLB))+abs(x3(iLB))+abs(x4(iLB))
+    Y_sum=abs(y1(iLB))+abs(y2(iLB))+abs(y3(iLB))+abs(y4(iLB))
+    Z_sum=abs(z1(iLB))+abs(z2(iLB))+abs(z3(iLB))+abs(z4(iLB))
+        
+    *IF,X_sum,NE,0,AND,Y_sum,NE,0,then
+        ESEL,s,cent,Z,0
+        plane=1   ! XY 
+    *ELSEIF,X_sum,NE,0,AND,Z_sum,NE,0,then
+        ESEL,s,cent,Y,0
+        plane=2   ! XZ
+    *ELSEIF,Y_sum,NE,0,AND,Z_sum,NE,0,then
+        ESEL,s,cent,X,0
+        plane=3   ! YZ
+    *ELSE
+        /sys,msg %username% "Not supported!!!"
+    *ENDIF    
+    
+    *GET,NrE,ELEM,0,COUNT               
+    *DIM,N_E,ARRAY,NrE,1
+    *VGET,N_E,ELEM, ,ELIST 
+
+    ! Save all elements
+    *DO,ii,1,NrE             
+        *IF,plane,EQ,1,then ! XY
+            *GET,coor_ele_1_rough,ELEM,N_E(ii),CENT,X  !Xc      
+            *GET,coor_ele_2_rough,ELEM,N_E(ii),CENT,Y  !Yc
+            coor_ele_1=NINT(coor_ele_1_rough)
+            coor_ele_2=NINT(coor_ele_2_rough)
+            coor_1_A=x1(iLB)
+            coor_1_B=x2(iLB)
+            coor_1_C=x3(iLB)
+            coor_1_D=x4(iLB)
+            coor_2_A=y1(iLB)
+            coor_2_B=y2(iLB)
+            coor_2_C=y3(iLB)
+            coor_2_D=y4(iLB)                      
+        *ELSEIF,plane,EQ,2,then ! XZ
+            *GET,coor_ele_1_rough,ELEM,N_E(ii),CENT,X       
+            *GET,coor_ele_2_rough,ELEM,N_E(ii),CENT,Z
+            coor_ele_1=NINT(coor_ele_1_rough)
+            coor_ele_2=NINT(coor_ele_2_rough)
+            coor_1_A=x1(iLB)
+            coor_1_B=x2(iLB)
+            coor_1_C=x3(iLB)
+            coor_1_D=x4(iLB)
+            coor_2_A=z1(iLB)
+            coor_2_B=z2(iLB)
+            coor_2_C=z3(iLB)
+            coor_2_D=z4(iLB)  
+        *ELSEIF,plane,EQ,3,then !YZ
+            *GET,coor_ele_1_rough,ELEM,N_E(ii),CENT,Y       
+            *GET,coor_ele_2_rough,ELEM,N_E(ii),CENT,Z
+            coor_ele_1=NINT(coor_ele_1_rough)
+            coor_ele_2=NINT(coor_ele_2_rough)            
+            coor_1_A=y1(iLB)
+            coor_1_B=y2(iLB)
+            coor_1_C=y3(iLB)
+            coor_1_D=y4(iLB)
+            coor_2_A=z1(iLB)
+            coor_2_B=z2(iLB)
+            coor_2_C=z3(iLB)
+            coor_2_D=z4(iLB)             
+        *ENDIF
+        !            
+        d_LB_L1=(coor_ele_2-coor_2_A)*(coor_1_B-coor_1_A)-(coor_ele_1-coor_1_A)*(coor_2_B-coor_2_A)
+        *IF,d_LB_L1,GE,0,THEN
+            d_LB_L1_check=1 ! (1=left side; 0 right side)
+        *ELSE
+            d_LB_L1_check=0 ! (1=left side; 0 right side)
+        *ENDIF
+        !
+        d_LB_L2=(coor_ele_2-coor_2_B)*(coor_1_C-coor_1_B)-(coor_ele_1-coor_1_B)*(coor_2_C-coor_2_B)
+        *IF,d_LB_L2,GE,0,THEN
+            d_LB_L2_check=1 
+        *ELSE
+            d_LB_L2_check=0 
+        *ENDIF
+        !
+        d_LB_L3=(coor_ele_2-coor_2_C)*(coor_1_D-coor_1_C)-(coor_ele_1-coor_1_C)*(coor_2_D-coor_2_C)
+        *IF,d_LB_L3,GE,0,THEN
+            d_LB_L3_check=1 
+        *ELSE
+            d_LB_L3_check=0 
+        *ENDIF
+!
+        d_LB_L4=(coor_ele_2-coor_2_D)*(coor_1_A-coor_1_D)-(coor_ele_1-coor_1_D)*(coor_2_A-coor_2_D)
+        *IF,d_LB_L4,GE,0,THEN
+            d_LB_L4_check=1 
+        *ELSE
+            d_LB_L4_check=0 
+        *ENDIF
+!
+        dA_sum=d_LB_L1_check
+        dB_sum=d_LB_L2_check
+        dC_sum=d_LB_L3_check
+        dD_sum=d_LB_L4_check
+        d_sum=dA_sum+dB_sum+dC_sum+dD_sum
+!  
+        *IF,d_sum,GE,3.9,THEN
+            ELE_LB(ii,iLB)=N_E(ii) ! Elementnummer von Belastungsblock ILB     
+        *ELSE
+            ELE_LB(ii,iLB)=0
+        *ENDIF        
+  *ENDDO                
+*ENDDO
+
+!
+allsel
+
+! Select elements which are included in ELE_LB (of all iLB)
+aux=0
+*DO,sel_e1,1,n_SC
+    *do,sel_e2,1,NrE_all
+        *if,ELE_LB(sel_e2,sel_e1),GT,0,then
+            aux=aux+1
+            *if,aux,EQ,1,then
+                esel,s,elem,,ELE_LB(sel_e2,sel_e1) 
+            *else
+                esel,a,elem,,ELE_LB(sel_e2,sel_e1)
+            *endif 
+        *else
+        *endif
+    *enddo
+*enddo
+
+*DEL,N_E,,NOPR
