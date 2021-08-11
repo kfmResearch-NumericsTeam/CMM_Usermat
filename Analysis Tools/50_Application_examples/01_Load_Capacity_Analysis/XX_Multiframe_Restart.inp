@@ -1,0 +1,101 @@
+! ----------------------------------------------------------------------------
+! ----------------------------------------------------------------------------
+! XX MULTIFRAME RESTART 
+! ----------------------------------------------------------------------------
+! ----------------------------------------------------------------------------
+!
+*DIM,delta_pres,ARRAY,1,1
+*DIM,loop_max,ARRAY,1,1
+*DIM,sloop_,ARRAY,1,1
+!
+! ----------------------------------------------------------------------------
+! 01. Inputs (to define by the user)
+! ----------------------------------------------------------------------------
+*set,delta_pres(1,1),-50000 ! use it as presure or force increment  
+*set,loop_max(1,1),10**10
+!
+! ----------------------------------------------------------------------------
+! 02. Start multiframe restart
+! ----------------------------------------------------------------------------
+*do,sloop,1,loop_max(1,1) 
+
+    sloop_(1,1)=sloop
+
+    ! save parameter/data not defined before the first solve command
+    *cfopen,natural,txt ! remark: never place vwrite in a mainfile)
+    *vwrite,delta_pres(1,1),loop_max(1,1),sloop_(1,1)
+    (F20.8)
+    *cfclos 
+    *DEL,delta_pres,,NOPR
+    *DEL,loop_max,,NOPR
+    *DEL,sloop_,,NOPR
+
+    ! global Failure and divergence -> if >0.5 terminate analysis
+    *IF,stop_value,GT,0.5,EXIT 
+
+    ! Multiframe restart 
+    /solu
+    RESCONTROL,DEFINE,LAST,LAST,0
+    ANTYPE,0,restart,LAST,LAST,CONTINUE  !RESUME,(DATABASE FILE) rest resumes the database
+
+    ! load paramters
+    /UIS,MSGPOP,3
+    *DIM,delta_pres,ARRAY,1,1
+    *DIM,loop_max,ARRAY,1,1
+    *DIM,sloop_,ARRAY,1,1
+    /UIS,MSGPOP,2
+    *VREAD,delta_pres(1,1),natural,txt,,,,,,0
+    (F20.8)
+    *VREAD,loop_max(1,1),natural,txt,,,,,,1
+    (F20.8)
+    *VREAD,sloop_(1,1),natural,txt,,,,,,2
+    (F20.8)
+       
+    ! Pressure (increment) or ...
+    !sfcum,pres,add,,,
+    !sfe,all,2,pres,1,delta_pres(1,1)
+    
+    ! ... Force (increment)    
+    fcum,add,,
+    F,21,FZ,delta_pres(1,1)
+    F,25,FZ,delta_pres(1,1)
+    F,29,FZ,delta_pres(1,1)
+    F,33,FZ,delta_pres(1,1)
+
+    F,34,FZ,delta_pres(1,1)
+    F,22,FZ,delta_pres(1,1)
+
+    F,23,FZ,delta_pres(1,1)
+    F,35,FZ,delta_pres(1,1)
+
+    F,36,FZ,delta_pres(1,1)
+    F,32,FZ,delta_pres(1,1)
+    F,28,FZ,delta_pres(1,1)
+    F,24,FZ,delta_pres(1,1)
+    allsel
+
+    ! Konvergenzkriterien
+    CNVTOL,F,,0.9     
+    CNVTOL,U,,0.9
+    CNVTOL,M,-1,3
+    !NCNV,0
+
+    ! Solver-Einstellungen
+    autots,1                  
+    nsubst,1,1,1              
+    time,1+sloop_(1,1)        
+    nropt,full,,on
+
+    ! Speichern von Daten
+    outres,erase              
+    outres,nsol,all 
+    outres,rsol,all 
+    outres,esol,all 
+    outres,svar,all 
+    !
+    solve
+    !
+    ! Failure check
+    /Input,Pfad_failure_check,inp,,0,0
+    !
+*enddo 
