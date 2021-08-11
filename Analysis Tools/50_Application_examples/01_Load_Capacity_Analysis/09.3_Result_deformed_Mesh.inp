@@ -1,0 +1,265 @@
+!-------------------------------------------------------------------------------
+! 4a DEFORMED MESH EXTRACTION 
+!-------------------------------------------------------------------------------
+
+! Purpose:  Extract the Results to a .txt for the linear elastic analysis incl.:  
+!               - Sandwich forces: mx, my, mxy, nx, ny, nxy, vx, vxy
+!               - Strains: ex, ey, exy
+!               - Curvatures: kx, ky, kxy
+! Status:   almost done (chapter 3 missing)
+
+!-------------------------------------------------------------------------------
+! 1.    GENERAL 
+!-------------------------------------------------------------------------------
+
+/POST1                              ! Enter postprocessor
+
+
+
+! 1.1.2 Set level for which extraction is happening
+!--------------------------------------------------
+n_L = 4
+*DIM,Level,CHAR,n_L
+Level(1) = 'D'
+Level(2) = 'P'
+Level(3) = 'F'
+Level(4) = 'L'
+
+!
+! 1.1.4 Set the tension level of current analysis
+!------------------------------------------------
+n_T = 3
+*DIM,Tension,CHAR,n_L
+Tension(1) = '0'
+Tension(2) = '1'
+Tension(3) = 'T'
+
+*IF,kRiss_P,GT,0.9,THEN
+    ten = 2
+*ELSEIF,kRiss_P,LT,0.15,THEN
+    ten = 1
+*ELSE
+    ten = 3
+*ENDIF
+
+! Char array with component names     
+n_F=1
+*DIM,Comp,CHAR,n_F
+Comp(1) = 'Platte'
+Comp(2) = 'LW'
+Comp(3) = 'KW'
+Comp(4) = 'BR'
+
+! Seetings (only for description for the output)
+! n_F=1 not equal to one n-> all Components should be extracted
+lvl=1  ! Set level
+!-------------------------------------------------------------------------------
+! 2.    NODE COORDINATES AND ELEMENTS  
+!-------------------------------------------------------------------------------
+
+! Extract the coordinates of each node AND the nodes correspond. to the elements
+
+*DO,cmp,1,n_F
+  
+    ! 2.1 Coordinates of the nodes '..._coor_nodes_defo.txt'
+    !---------------------------------------------------------------------------
+    NSEL,ALL
+    ALLSEL
+    ESEL,S, , ,Comp(cmp)
+    NSLE,ALL                            ! Nodes attaches to those elements
+    *GET,NrN,NODE,0,COUNT               ! NrN: Number of nodes in the list
+    *DIM,N_N,ARRAY,NrN,1
+    *VGET,N_N,NODE, ,NLIST              ! N_N: Node list array
+    ALLSEL
+
+    *DIM,coor_nodes,ARRAY,NrN,4
+    *DO,ii,1,NrN
+      coor_nodes(ii,1) = N_N(ii)                ! 1. node number
+      *GET,coor_nodes(ii,2),NODE,N_N(ii),LOC,X  ! 2. x-coor of node
+      *GET,coor_nodes(ii,3),NODE,N_N(ii),LOC,Y  ! 3. y-coor of node
+      *GET,coor_nodes(ii,4),NODE,N_N(ii),LOC,Z  ! 4. z-coor of node     
+    *ENDDO
+ 
+    ! 2.2 Node numbers per element '..._elem_nodes_defo.txt'
+    !---------------------------------------------------------------------------
+    NSEL,ALL
+    ALLSEL
+    ESEL,S, , ,Comp(cmp)
+    NSLE,ALL
+    *GET,NrE,ELEM,0,COUNT               ! NrE: Number of elements in the list
+    *DIM,N_E,ARRAY,NrE,1
+    *VGET,N_E,ELEM, ,ELIST              ! N_E: Element list array
+    ALLSEL
+    
+    *DIM,elem_nodes,ARRAY,NrE,5
+    *DO,ii,1,NrE
+        elem_nodes(ii,1) = N_E(ii)                 ! 1. element number
+        *GET,elem_nodes(ii,2),ELEM,N_E(ii),NODE,1  ! 2. node number 1
+        *GET,elem_nodes(ii,3),ELEM,N_E(ii),NODE,2  ! 3. node number 2
+        *GET,elem_nodes(ii,4),ELEM,N_E(ii),NODE,3  ! 4. node number 3
+        *GET,elem_nodes(ii,5),ELEM,N_E(ii),NODE,4  ! 5. node number 4
+    *ENDDO
+
+    *DEL,NrN,,NOPR
+    *DEL,N_N,,NOPR
+    *DEL,NrE,,NOPR
+    *DEL,N_E,,NOPR 
+ 
+        ! 2.1MACRO coor_nodes - [LVL][TEN][COMP]_coor_nodes_defo.txt
+    ! -------------------------------------------------------------
+
+    ! Arg1 is the array name (string)
+    ! Arg2 is the format descriptor (string)
+    ! Arg3 is the number of columns to write (integer) 
+    ! Arg4 is the file name and extention (string)
+
+    Arg1 = 'coor_nodes'
+    Arg2 = 'f20.5'
+    Arg3 = 4
+    Arg4 = '%Level(lvl)%%Tension(ten)%%Comp(cmp)%_coor_nodes_defo.txt'
+
+    ~eui,'set arrname [ans_getvalue PARM,Arg1,value]'
+    ~eui,'set formatdescriptor [ans_getvalue PARM,Arg2,value]'
+    ~eui,'set numcol [ans_getvalue PARM,Arg3,value]'
+    ~eui,'set filename [ans_getvalue PARM,Arg4,value]'
+    ! Trim up the strings a bit
+    ~eui,'set arrname [string trim $arrname]'
+    ~eui,'set formatdescriptor [string trim $formatdescriptor]'
+    ~eui,'set filename [string trim $filename]' 
+    ~eui,'set cmd "*mwrite,$arrname"'
+    ~eui,'append cmd "(1,1),"'
+    ~eui,'append cmd [file rootname $filename]'
+    ! Put a comma between the filename and extension
+    ~eui,'append cmd ","'
+    ! Pull off the leading period from the extension. Leaving off the
+    ! comma above and forgeting to strip off the leading period in the
+    ! extension is a case of two errors canceling each other out. If 
+    ! only life were always so kind...
+    ~eui,'append cmd [string trimleft [file extension $filename] "."]'
+    ~eui,'append cmd "\n"'
+    ~eui,'append cmd "($numcol$formatdescriptor)"
+    ~eui,'set fid [open mk_mwritehelper.mac w]'
+    ~eui,'puts $fid $cmd'
+    ~eui,'close $fid'
+    ~eui,'ans_sendcommand mk_mwritehelper'
+    ~eui,'file delete mk_mwritehelper.mac'
+                                     
+                                     
+    ! 2.2MACRO elem_nodes - [LVL][TEN][COMP]_elem_nodes_defo.txt
+    ! -------------------------------------------------------------
+
+    ! Arg1 is the array name (string)
+    ! Arg2 is the format descriptor (string)
+    ! Arg3 is the number of columns to write (integer) 
+    ! Arg4 is the file name and extention (string)
+
+    Arg1 = 'elem_nodes'
+    Arg2 = 'f20.5'
+    Arg3 = 5
+    Arg4 = '%Level(lvl)%%Tension(ten)%%Comp(cmp)%_elem_nodes_defo.txt'
+
+    ~eui,'set arrname [ans_getvalue PARM,Arg1,value]'
+    ~eui,'set formatdescriptor [ans_getvalue PARM,Arg2,value]'
+    ~eui,'set numcol [ans_getvalue PARM,Arg3,value]'
+    ~eui,'set filename [ans_getvalue PARM,Arg4,value]'
+    ! Trim up the strings a bit
+    ~eui,'set arrname [string trim $arrname]'
+    ~eui,'set formatdescriptor [string trim $formatdescriptor]'
+    ~eui,'set filename [string trim $filename]' 
+    ~eui,'set cmd "*mwrite,$arrname"'
+    ~eui,'append cmd "(1,1),"'
+    ~eui,'append cmd [file rootname $filename]'
+    ! Put a comma between the filename and extension
+    ~eui,'append cmd ","'
+    ! Pull off the leading period from the extension. Leaving off the
+    ! comma above and forgeting to strip off the leading period in the
+    ! extension is a case of two errors canceling each other out. If 
+    ! only life were always so kind...
+    ~eui,'append cmd [string trimleft [file extension $filename] "."]'
+    ~eui,'append cmd "\n"'
+    ~eui,'append cmd "($numcol$formatdescriptor)"
+    ~eui,'set fid [open mk_mwritehelper.mac w]'
+    ~eui,'puts $fid $cmd'
+    ~eui,'close $fid'
+    ~eui,'ans_sendcommand mk_mwritehelper'
+    ~eui,'file delete mk_mwritehelper.mac' 
+
+    *DEL,coor_nodes,,NOPR
+    *DEL,elem_nodes,,NOPR
+ 
+*ENDDO 
+ 
+ 
+!-------------------------------------------------------------------------------
+! 4.    DISPLACEMENTS
+!------------------------------------------------------------------------------- 
+
+! Extract nodal displacements and rotations in x, y and z direction
+
+*DO,cmp,1,n_F
+
+    NSEL,ALL
+    ALLSEL
+    ESEL,S, , ,Comp(cmp)
+    NSLE,ALL                            ! Nodes attaches to those elements
+    *GET,NrN,NODE,0,COUNT               ! NrN: Number of nodes in the list
+    *DIM,N_N,ARRAY,NrN,1
+    *VGET,N_N,NODE, ,NLIST              ! N_N: Node list array
+    ALLSEL   
+   
+    *DIM,defor_rot,ARRAY,NrN,7
+    *DO,ii,1,NrN
+      defor_rot(ii,1) = N_N(ii)                  ! 1. node number
+      *GET,defor_rot(ii,2),NODE,N_N(ii),U,X      ! 2. displ in x
+      *GET,defor_rot(ii,3),NODE,N_N(ii),U,Y      ! 3. displ in y
+      *GET,defor_rot(ii,4),NODE,N_N(ii),U,Z      ! 4. displ in z
+      *GET,defor_rot(ii,5),NODE,N_N(ii),ROT,X    ! 5. rotat in x
+      *GET,defor_rot(ii,6),NODE,N_N(ii),ROT,Y    ! 6. rotat in y
+      *GET,defor_rot(ii,7),NODE,N_N(ii),ROT,Z    ! 7. rotat in z
+    *ENDDO
+    
+    *DEL,NrN,,NOPR
+    *DEL,N_N,,NOPR
+
+    ! 4MACRO defor_rot - [LVL][TEN][COMP]_defor_rot_defo.txt
+    ! -------------------------------------------------------------
+
+    ! Arg1 is the array name (string)
+    ! Arg2 is the format descriptor (string)
+    ! Arg3 is the number of columns to write (integer) 
+    ! Arg4 is the file name and extention (string)
+
+    Arg1 = 'defor_rot'
+    Arg2 = 'f20.5'
+    Arg3 = 7
+    Arg4 = '%Level(lvl)%%Tension(ten)%%Comp(cmp)%_defor_rot_defo.txt'
+
+    ~eui,'set arrname [ans_getvalue PARM,Arg1,value]'
+    ~eui,'set formatdescriptor [ans_getvalue PARM,Arg2,value]'
+    ~eui,'set numcol [ans_getvalue PARM,Arg3,value]'
+    ~eui,'set filename [ans_getvalue PARM,Arg4,value]'
+    ! Trim up the strings a bit
+    ~eui,'set arrname [string trim $arrname]'
+    ~eui,'set formatdescriptor [string trim $formatdescriptor]'
+    ~eui,'set filename [string trim $filename]' 
+    ~eui,'set cmd "*mwrite,$arrname"'
+    ~eui,'append cmd "(1,1),"'
+    ~eui,'append cmd [file rootname $filename]'
+    ! Put a comma between the filename and extension
+    ~eui,'append cmd ","'
+    ! Pull off the leading period from the extension. Leaving off the
+    ! comma above and forgeting to strip off the leading period in the
+    ! extension is a case of two errors canceling each other out. If 
+    ! only life were always so kind...
+    ~eui,'append cmd [string trimleft [file extension $filename] "."]'
+    ~eui,'append cmd "\n"'
+    ~eui,'append cmd "($numcol$formatdescriptor)"
+    ~eui,'set fid [open mk_mwritehelper.mac w]'
+    ~eui,'puts $fid $cmd'
+    ~eui,'close $fid'
+    ~eui,'ans_sendcommand mk_mwritehelper'
+    ~eui,'file delete mk_mwritehelper.mac'
+
+    *DEL,defor_rot,,NOPR
+
+*ENDDO

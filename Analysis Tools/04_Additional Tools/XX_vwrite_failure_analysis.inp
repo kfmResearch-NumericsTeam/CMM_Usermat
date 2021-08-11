@@ -1,0 +1,97 @@
+! ----------------------------------------------------------------------------
+! ----------------------------------------------------------------------------
+! XX WRITE RESULTS FROM THE FAILURE ANALYSIS 
+! ----------------------------------------------------------------------------
+! ----------------------------------------------------------------------------
+!
+! string dimensions
+/UIS,MSGPOP,3
+*dim,string_1,string,80
+*dim,string_2,string,80
+*dim,string_3,string,80
+*dim,string_4,string,80
+*dim,string_5,string,80
+*dim,string_6,string,80
+*dim,string_7,string,80
+*dim,string_8,string,80
+*dim,string_9,string,80
+*dim,string_10,string,80
+*dim,string_11,string,80
+*dim,string_12,string,80
+*dim,string_13,string,80
+string_1(1) = 'TIME STEP AT FAILURE'
+string_2(1) = 'CONVERGENCE'
+string_3(1) = 'CONCRETE FAILURE'
+string_4(1) = 'STEEL FAILURE'
+string_5(1) = 'SHEAR FAILURE'
+
+string_6(1) = '0=conv., 1=no conv.'
+string_7(1) = '0=no failure, 1=failure'
+string_8(1) = 'failed element'
+string_9(1) = 'failed layer'
+!
+string_10(1) = 'failed element Layer 1'
+string_11(1) = 'failed element Layer 2'
+string_12(1) = 'failed element Layer 3'
+string_13(1) = 'failed element Layer 4'
+!
+*cfopen,failure_infos,txt
+*vwrite 
+('FAILURE CHECK CMM-USERMAT')
+*vwrite 
+('-------------------------------------------------------------------')
+*vwrite 
+('-------------------------------------------------------------------')
+*VWRITE,string_1(1), string_1(9), string_1(17), failure_check_output(1,1)
+(3A,F10.5) 
+*vwrite 
+('-------------------------------------------------------------------')
+! ----------------
+! Convergence
+*VWRITE,string_2(1), string_2(9), string_2(17), failure_check_output(1,5),' ' , string_6(1),string_6(9),string_6(17),string_6(25)
+(3A,F5.1,A,4A)
+! ----------------
+! Concrete
+*VWRITE,string_3(1), string_3(9), string_3(17), failure_check_output(1,2),' ' , string_7(1),string_7(9),string_7(17),string_7(25)
+(3A,F5.1,A,3A)
+*IF,failure_check_output(1,2),GT,0,then
+    *VWRITE,'', '', '', failure_conc_ele,' ' , string_8(1),string_8(9),string_8(17),string_8(25)
+    (3A,F5.1,A,3A)
+    *VWRITE,'', '', '', failure_conc_ll ,' ' , string_9(1),string_9(9),string_9(17),string_9(25)
+    (3A,F5.1,A,3A)
+*ENDIF
+! ----------------   
+! Steel
+*VWRITE,string_4(1), string_4(9), string_4(17), failure_check_output(1,3),' ' , string_7(1),string_7(9),string_7(17),string_7(25)
+(3A,F5.1,A,3A)   
+*IF,failure_check_output(1,3),GT,0,then
+    *if,L1_A,GT,0,then      
+        *VWRITE,'', '', '', failure_steel_ele_1L,' ' , string_10(1),string_10(9),string_10(17),string_10(25)
+        (3A,F5.1,A,3A)        
+    *endif
+    
+    *if,L2_A,GT,0,then      
+        *VWRITE,'', '', '', failure_steel_ele_2L,' ' , string_11(1),string_11(9),string_11(17),string_11(25)
+        (3A,F5.1,A,3A)        
+    *endif
+    
+    *if,L3_A,GT,0,then      
+        *VWRITE,'', '', '', failure_steel_ele_3L,' ' , string_12(1),string_12(9),string_12(17),string_12(25)
+        (3A,F5.1,A,3A)        
+    *endif 
+    
+    *if,L4_A,GT,0,then      
+        *VWRITE,'', '', '', failure_steel_ele_4L,' ' , string_13(1),string_13(9),string_13(17),string_13(25)
+        (3A,F5.1,A,3A)        
+    *endif     
+*ENDIF
+! ----------------
+! Shear
+*VWRITE,string_5(1), string_5(9), string_5(17), failure_check_output(1,4),' ' , string_7(1),string_7(9),string_7(17),string_7(25)
+(3A,F5.1,A,3A)
+*IF,failure_check_output(1,4),GT,0,then
+    *VWRITE,'', '', '', failure_shear_ele,' ' , string_8(1),string_8(9),string_8(17),string_8(25)
+    (3A,F5.1,A,3A)
+*ENDIF
+!  
+*cfclos

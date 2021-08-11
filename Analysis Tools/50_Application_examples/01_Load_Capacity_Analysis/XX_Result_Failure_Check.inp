@@ -1,0 +1,253 @@
+! ----------------------------------------------------------------------------
+! ----------------------------------------------------------------------------
+! XX FAILURE CHECK 
+! ----------------------------------------------------------------------------
+! ----------------------------------------------------------------------------
+! 
+/POST1
+failure_conc=0
+failure_steel=0
+sol_conver=0
+failure_shear=0
+
+!-------------------------------------------------------------------------------
+! 01. CHECK CONVERGENCE 
+!-------------------------------------------------------------------------------
+
+set,last,last
+*GET,sol,ACTIVE,0,SOLU,CNVG        ! "CNVG=0" : Not converged
+                                   ! "CNVG=1l" : Converged   
+*IF,sol,LT,0.5,THEN                ! Continue if converged, if not ignore file
+    Displaystring = 'NotConverged'
+    set,PREVIOUS,PREVIOUS                  
+    sol_conver=1                   ! keine Konvergenz
+*ELSE
+    Displaystring = 'Converged'
+    set,last,last  
+    sol_conver=0                   ! Konvergenz i.O.
+*ENDIF 
+!
+!-------------------------------------------------------------------------------
+! 02. CHECK CONCRETE FAILURE 
+!-------------------------------------------------------------------------------
+!
+ALLSEL
+ESEL,S,ENAME,,181
+NSLE,ALL       
+! Elements
+*GET,NrE,ELEM,0,COUNT               ! NrE: Number of elements in the list
+*DIM,N_E,ARRAY,NrE,1
+*VGET,N_E,ELEM, ,ELIST              ! N_E: Element list array
+
+ 
+*DO,ii,1,NrE     
+    ESEL,S,ELEM, ,N_E(ii)
+    NSLE,ALL
+    *GET,NrN,NODE,0,COUNT               ! NrN: Number of nodes in the list
+    *DIM,N_N,ARRAY,NrN,1
+    *VGET,N_N,NODE, ,NLIST              ! N_N: Node list array
+   
+    ! type associated with the selected element           
+    *GET, NrT, ELEM,N_E(ii), attr, type 
+    *GET, NrL, SHEL, NrT, Prop,NLAY 
+    !!                                   
+    *DO,kk,1,NrN
+        *DO,ll,1,NrL
+            Layer,ll
+            *GET,check_conc,NODE,N_N(kk),SVAR,2
+                *IF,check_conc,GT,0.5,THEN      ! Failure yes
+                    failure_conc=1
+                    failure_conc_ele=N_E(ii)    ! failed element
+                    failure_conc_ll=ll      ! failed element layer
+                *ELSEIF,check_conc,LT,0.5,THEN  ! Failure no
+                    failure_conc=0
+                    failure_conc_ele=0    
+                    failure_conc_ll=0                         
+                *ENDIF
+                *IF,failure_conc,GT,0.5,EXIT
+        *enddo
+        *IF,failure_conc,GT,0.5,EXIT
+    *ENDDO
+
+    *DEL,NrN,,NOPR
+    *DEL,N_N,,NOPR
+    *DEL,NrT,,NOPR
+    *DEL,NrL,,NOPR
+    
+
+    *IF,failure_conc,GT,0.5,EXIT
+    
+*ENDDO
+*DEL,NrE,,NOPR
+*DEL,N_E,,NOPR 
+!
+!-------------------------------------------------------------------------------
+! 03. CHECK STEEL FAILURE 
+!-------------------------------------------------------------------------------
+!
+ALLSEL
+ESEL,S,ENAME,,181
+NSLE,ALL 
+! Elements      
+*GET,NrE,ELEM,0,COUNT               ! NrE: Number of elements in the list
+*DIM,N_E,ARRAY,NrE,1
+*VGET,N_E,ELEM, ,ELIST              ! N_E: Element list array
+
+*DO,ii,1,NrE        
+    ESEL,S,ELEM, ,N_E(ii)   
+    NSLE,ALL
+    *GET,NrN,NODE,0,COUNT               ! NrN: Number of nodes in the list
+    *DIM,N_N,ARRAY,NrN,1
+    *VGET,N_N,NODE, ,NLIST              ! N_N: Node list array
+    
+    *DO,kk,1,NrN
+        *GET,layer_1L,NODE,N_N(kk),SVAR,58      
+        *GET,layer_2L,NODE,N_N(kk),SVAR,59  
+        *GET,layer_3L,NODE,N_N(kk),SVAR,60  
+        *GET,layer_4L,NODE,N_N(kk),SVAR,61  
+                  
+        ! 1. Lage
+        LAYER,layer_1L
+        *GET,L1_A,NODE,N_N(kk),SVAR,3 ! 1=Fliessen, 2=gerissen
+        *GET,L1_B,NODE,N_N(kk),SVAR,4 ! 1=Fliessen, 2=gerissen
+        
+        *IF,L1_A,GT,1,OR,L1_B,GT,1,then
+            fs_1L=1        ! Failure yes
+            failure_steel_ele_1L=N_E(ii)    ! failed element
+            failure_steel_ll_1L=layer_1L    ! failed element layer            
+        *ELSE    
+            fs_1L=0        ! Failure no
+        *ENDIF     
+
+        ! 2. Lage
+        LAYER,layer_2L
+        *GET,L2_A,NODE,N_N(kk),SVAR,3 ! 1=Fliessen, 2=gerissen
+        *GET,L2_B,NODE,N_N(kk),SVAR,4 ! 1=Fliessen, 2=gerissen
+        
+        *IF,L2_A,GT,1,OR,L2_B,GT,1,then
+            fs_2L=1        ! Failure yes
+            failure_steel_ele_2L=N_E(ii)    ! failed element
+            failure_steel_ll_2L=layer_2L    ! failed element layer             
+        *ELSE    
+            fs_2L=0        ! Failure no
+        *ENDIF   
+
+        ! 3. Lage
+        LAYER,layer_3L
+        *GET,L3_A,NODE,N_N(kk),SVAR,3 ! 1=Fliessen, 2=gerissen
+        *GET,L3_B,NODE,N_N(kk),SVAR,4 ! 1=Fliessen, 2=gerissen
+        
+        *IF,L3_A,GT,1,OR,L3_B,GT,1,then
+            fs_3L=1        ! Failure yes
+            failure_steel_ele_3L=N_E(ii)    ! failed element
+            failure_steel_ll_3L=layer_3L    ! failed element layer             
+        *ELSE    
+            fs_3L=0        ! Failure no
+        *ENDIF  
+
+        ! 4. Lage
+        LAYER,layer_4L
+        *GET,L4_A,NODE,N_N(kk),SVAR,3 ! 1=Fliessen, 2=gerissen
+        *GET,L4_B,NODE,N_N(kk),SVAR,4 ! 1=Fliessen, 2=gerissen
+        
+        *IF,L4_A,GT,1,OR,L4_B,GT,1,then
+            fs_4L=1        ! Failure yes
+            failure_steel_ele_4L=N_E(ii)    ! failed element
+            failure_steel_ll_4L=layer_4L    ! failed element layer             
+        *ELSE    
+            fs_4L=0        ! Failure no
+        *ENDIF 
+        
+        ! Check failure
+        failure_steel=fs_1L+fs_2L+fs_3L+fs_4L         
+        *IF,failure_steel,GT,0.5,EXIT       
+        
+    *ENDDO
+    
+    *DEL,NrN,,NOPR
+    *DEL,N_N,,NOPR
+    
+    *IF,failure_steel,GT,0.5,EXIT 
+    
+*ENDDO
+*DEL,NrE,,NOPR
+*DEL,N_E,,NOPR 
+allsel  
+!
+!-------------------------------------------------------------------------------
+! 04. CHECK SHEAR FAILURE 
+!-------------------------------------------------------------------------------
+!
+! Select elements inside user defined shear area
+/Input,Pfad_element_selection,inp,,0,0            
+
+! Start shear check per element  
+NSLE,ALL 
+ 
+*GET,NrE,ELEM,0,COUNT               
+*DIM,N_E,ARRAY,NrE,1
+*VGET,N_E,ELEM, ,ELIST              
+*DIM,vrd,ARRAY,NrE,3
+
+*DO,ii,1,NrE    
+
+    ! Call shear strength Algo  
+    /Input,Pfad_shear_strength,inp,,0,0 
+
+    ! Check failure      
+    *IF,shear_check,GT,0,then
+        *if,v_0,gt,v_rd,then
+            failure_shear=1        ! Failure yes
+            failure_shear_ele=N_E(ii)    ! failed element           
+        *elseif,v_0,le,v_rd,then
+            failure_shear=0        ! Failure no
+            failure_shear_ele=0
+        *else
+            /sys,msg %username% "error in shear failure!!!!" 
+        *ENDIF 
+    *ELSEIF,shear_check,LE,0,then 
+        failure_shear=0        ! Failure no
+        failure_shear_ele=0
+    *ENDIF        
+
+    ! Delete parameter    
+    *DEL,NrN,,NOPR
+    *DEL,N_N,,NOPR
+    *DEL,evt,,NOPR
+    *DEL,evb,,NOPR
+    *DEL,e_v,,NOPR
+    *DEL,coor_layer_1L,,NOPR
+    *DEL,coor_layer_2L,,NOPR  
+    *DEL,coor_layer_3L,,NOPR
+    *DEL,coor_layer_4L,,NOPR
+    *DEL,evt,,NOPR
+    *DEL,evb,,NOPR
+    *DEL,coor_layer_top,,NOPR
+    *DEL,coor_layer_bot,,NOPR
+          
+    *IF,failure_shear,GT,0.5,EXIT  
+
+*ENDDO
+!
+*DEL,NrE,,NOPR
+*DEL,N_E,,NOPR 
+allsel
+!
+!-------------------------------------------------------------------------------
+! 05. DETERMINATE STOPVALUE (0 OR >=1) 
+!-------------------------------------------------------------------------------
+
+stop_value=failure_conc+failure_steel+sol_conver+failure_shear
+
+! save important data for every time step
+*GET, save_fco, active, 0, set, time ! extract active time step
+*DIM,failure_check_output,ARRAY,1,6
+*GET,failure_check_output(1,1),active,0,set,time 
+failure_check_output(1,2)=failure_conc
+failure_check_output(1,3)=failure_steel
+failure_check_output(1,4)=failure_shear
+failure_check_output(1,5)=sol_conver
+failure_check_output(1,6)=stop_value  
+!
+! Write failure mode
+/Input,Pfad_vwrite,inp,,0,0
