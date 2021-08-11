@@ -1,6 +1,6 @@
 ! ----------------------------------------------------------------------------
 ! ----------------------------------------------------------------------------
-! XX MULTIFRAME RESTART - Test
+! XX MULTIFRAME RESTART
 ! ----------------------------------------------------------------------------
 ! ----------------------------------------------------------------------------
 !
@@ -21,7 +21,7 @@
 
     sloop_(1,1)=sloop
 
-    ! save parameter/data not defined before the first solve command
+    ! Save parameter/data not defined before the first solve command
     *cfopen,natural,txt ! remark: never place vwrite in a mainfile)
     *vwrite,delta_pres(1,1),loop_max(1,1),sloop_(1,1)
     (F20.8)
