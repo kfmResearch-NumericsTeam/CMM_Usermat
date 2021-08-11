@@ -11,7 +11,7 @@
 ! ----------------------------------------------------------------------------
 ! 01. Inputs (to define by the user)
 ! ----------------------------------------------------------------------------
-*set,delta_pres(1,1),-50000 ! use it as presure or force increment  
+*set,delta_pres(1,1),-50000 ! use it as pressure or force increment  
 *set,loop_max(1,1),10**10
 !
 ! ----------------------------------------------------------------------------
@@ -38,7 +38,7 @@
     RESCONTROL,DEFINE,LAST,LAST,0
     ANTYPE,0,restart,LAST,LAST,CONTINUE  !RESUME,(DATABASE FILE) rest resumes the database
 
-    ! load paramters
+    ! load parameters
     /UIS,MSGPOP,3
     *DIM,delta_pres,ARRAY,1,1
     *DIM,loop_max,ARRAY,1,1
