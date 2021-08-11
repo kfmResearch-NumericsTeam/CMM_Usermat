@@ -16,9 +16,9 @@ Allsel
 *DO,iLB,1,n_SC
 
     ! Search plane (XY, XZ or YZ)
-    X_sum=x1(iLB)+x2(iLB)+x3(iLB)+x4(iLB)
-    Y_sum=y1(iLB)+y2(iLB)+y3(iLB)+y4(iLB)
-    Z_sum=z1(iLB)+z2(iLB)+z3(iLB)+z4(iLB)
+    X_sum=abs(x1(iLB))+abs(x2(iLB))+abs(x3(iLB))+abs(x4(iLB))
+    Y_sum=abs(y1(iLB))+abs(y2(iLB))+abs(y3(iLB))+abs(y4(iLB))
+    Z_sum=abs(z1(iLB))+abs(z2(iLB))+abs(z3(iLB))+abs(z4(iLB))
         
     *IF,X_sum,NE,0,AND,Y_sum,NE,0,then
         ESEL,s,cent,Z,0
