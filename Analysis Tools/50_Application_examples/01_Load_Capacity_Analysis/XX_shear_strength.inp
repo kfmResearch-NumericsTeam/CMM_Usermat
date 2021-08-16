@@ -269,7 +269,7 @@
         *if,0.6*d_topL_to_L12,gt,thick_ele/2,then             
             L_06d_distance=d_botL_to_L12+0.4*d_topL_to_L12
             NrL_06d=NINT(L_06d_distance/h_layer+1)
-        *elseif,0.6*d_topL_to_L12,lt,thick_ele/2,then
+        *elseif,0.6*d_topL_to_L12,le,thick_ele/2,then
             L_06d_distance=0.6*d_topL_to_L12
             NrL_06d=NINT(NrL-L_06d_distance/h_layer)
         *else
@@ -289,7 +289,7 @@
         ! Estimate thickness of bot layer 
         *GET,h_layer,SHEL,NrT,Layd,1,THIC         
         ! Case distinction if decisive Layer is above or below the default origin
-        *if,0.6*d_botL_to_L34,gt,thick_ele/2,then             
+        *if,0.6*d_botL_to_L34,ge,thick_ele/2,then             
             L_06d_distance=d_topL_to_L34+0.4*d_botL_to_L34
             NrL_06d=NINT(NrL-L_06d_distance/h_layer)
         *elseif,0.6*d_botL_to_L34,lt,thick_ele/2,then
