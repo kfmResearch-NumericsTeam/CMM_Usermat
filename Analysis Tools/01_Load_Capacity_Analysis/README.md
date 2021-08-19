@@ -1,4 +1,4 @@
-# Load Capacity Analysis
+# Example Nr. 1: Load Capacity Analysis
 
 This Example shows how to carry out a automated load capacity analysis.
 
