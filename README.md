@@ -18,4 +18,4 @@ If you run into problems, please file an issue on the issue tracker. If we don't
 Guidelines for developers are under construction. However, we always accept contributions in the form of Pull Requests.
 
 ## License
-CMM_Usermat is licensed under the X License. See LICENSE, for more information.
+CMM_Usermat is licensed under the XX License. See LICENSE, for more information.
