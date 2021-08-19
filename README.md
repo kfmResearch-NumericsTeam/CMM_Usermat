@@ -9,7 +9,7 @@ For the Installation of the CMM_Usermat please contact weber@ibk.baug.ethz.ch.
 Follow the "Getting Started" instructions (tutorials and examples) - A link will follow.
 
 ## Questions and Feedback
-For questions and feedback please leave a message under Discussion
+[For questions and feedback please leave a message under Discussion](https://github.com/kfmResearch-NumericsTeam/CMM_Usermat/discussions)
 
 ## Issues
 If you run into problems, please file an issue on the issue tracker. If we don't know it is broken, we can't fix it...
