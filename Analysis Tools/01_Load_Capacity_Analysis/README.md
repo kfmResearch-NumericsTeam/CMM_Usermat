@@ -6,8 +6,8 @@ This Example shows how to carry out a automated load capacity analysis.
 ... A detailed description of this example will follow soon...
 
 ## Additional files you need
-- Multiframe_Restart
-- Result_Failure_Check
-- sel_ele_by_user_area
-- shear_strength
-- vwrite_failure_analysis
+- Multiframe_Restart.inp
+- Result_Failure_Check.inp
+- sel_ele_by_user_area.inp
+- shear_strength.inp
+- vwrite_failure_analysis.inp
