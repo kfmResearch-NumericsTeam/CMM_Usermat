@@ -1,0 +1,3 @@
+# Details about the shear_strength.inp
+
+... More is coming soon ...
