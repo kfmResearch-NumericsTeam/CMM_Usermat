@@ -6,7 +6,8 @@ This Example shows how to carry out a automated load capacity analysis.
 
 ... A detailed description of this example will follow soon...
 
-## Additonal files you need
+## Additonal files
+The following files you will need for the example. The files are stored under here.
 - Multiframe_Restart.inp
 - Result_Failure_Check.inp
 - sel_ele_by_user_area.inp
