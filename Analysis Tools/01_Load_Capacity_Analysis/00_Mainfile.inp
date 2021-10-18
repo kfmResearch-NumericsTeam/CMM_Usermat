@@ -32,9 +32,6 @@ Pfad_Resultate_deformed_mesh = '09.3_Result_deformed_Mesh'
 Pfad_shear_strength = 'XX_shear_strength'
 Pfad_element_selection = 'XX_sel_ele_by_user_area'
 
-*do 
-till=1
-*enddo
 !
 /Input,Pfad_Parameter,inp,,0,0  
 !
