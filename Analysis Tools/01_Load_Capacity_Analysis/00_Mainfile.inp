@@ -31,8 +31,7 @@ Pfad_Resultate_Nonlinear_Extract = '09.2_Result_Nonlinear_Extract'
 Pfad_Resultate_deformed_mesh = '09.3_Result_deformed_Mesh'
 Pfad_shear_strength = 'XX_shear_strength'
 Pfad_element_selection = 'XX_sel_ele_by_user_area'
-*do
-while
+
 !
 /Input,Pfad_Parameter,inp,,0,0  
 !
